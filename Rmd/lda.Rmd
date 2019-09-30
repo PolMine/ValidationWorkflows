@@ -1,0 +1,67 @@
+---
+title: "UNGA: A Topic Model"
+author: "Andreas Blaette, Christoph Leonhardt"
+date: "September 30, 2019"
+output:
+  ioslides_presentation:
+    css: css/stylesheet.css
+    logo: img/polmine.png
+    widescreen: yes
+  slidy_presentation: default
+editor_options:
+  chunk_output_type: console
+---
+
+## LDA Topic Model for the UNGA corpus {.smaller}
+
+- Getting started
+
+```{r, eval = TRUE, message = FALSE}
+library(polmineR)
+library("UNGA")
+library(topicmodels)
+```
+
+- Load the (optimised) topic model
+
+```{r, eval = TRUE}
+lda_filename <- list.files(system.file(package = "UNGA", "extdata", "topicmodels"), full.names = TRUE)
+lda <- readRDS(lda_filename)
+x <- terms(lda, 50)
+```
+
+
+## Topics 1-5 {.smaller}
+
+```{r, echo = FALSE}
+DT::datatable(x[,1:5])
+```
+
+
+## Topics 6-9 {.smaller}
+
+```{r, echo = FALSE}
+DT::datatable(x[,6:9])
+```
+
+## Topics 10-14 {.smaller}
+
+```{r, echo = FALSE}
+DT::datatable(x[,10:14])
+```
+
+## Topics 15-19 {.smaller}
+
+```{r, echo = FALSE}
+DT::datatable(x[,15:19])
+```
+
+
+## Migration Topics {.smaller}
+
+```{r, echo = FALSE}
+mig_topics <- c(105:106)
+DT::datatable(x[, mig_topics])
+```
+
+

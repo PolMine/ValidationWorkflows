@@ -1,0 +1,105 @@
+---
+title: "Mind the Neighborhood"
+subtitle: 'SSHOC Workshop'
+author: "Andreas Blaette"
+date: "September 30, 2019"
+output:
+  ioslides_presentation:
+    css: css/stylesheet.css
+    logo: img/polmine.png
+    widescreen: yes
+  slidy_presentation: default
+editor_options:
+  chunk_output_type: console
+---
+
+## The Neighborhood matters
+
+- "You shall know a word by the company it keeps" (Firth, J. R. 1957: 11)
+
+- Methods to analyse collocations / cooccurrences are based on an evaluation of the statistical significance of the occurrence of a term in the context of a node.
+
+- The statistical identification of cooccurrences highlights language patterns that deserve attention. Statements about meaning require that the quantitative analysis of text is combined with qualitative methods, i.e. an inspection of concordances. 
+
+- The following examples are based on the *UNGA*-corpus.
+
+```{r initialize, eval = TRUE, message = FALSE}
+library(polmineR)
+use("UNGA")
+```
+
+
+## Getting cooccurrences {.smaller}
+
+```{r, echo = FALSE}
+options("polmineR.pagelength" = 8L)
+```
+
+```{r, render = knit_print}
+cooccurrences("UNGA", query = 'migration', left = 10, right = 10)
+```
+
+
+## Visualising results: Wordclouds
+
+```{r, echo = FALSE, warning = FALSE, eval = TRUE}
+mig <- cooccurrences("UNGA", query = 'migration', left = 10, right = 10) %>%
+  subset(ll >= 11.83) %>%
+  subset(rank_ll <= 75L)
+
+wordcloud::wordcloud(
+  words = mig[["word"]],
+  freq = mig[["count_coi"]] * 2,
+  colors = rep(RColorBrewer::brewer.pal(8, "Dark2"), times = 7),
+  random.color = TRUE
+  )
+```
+
+
+## Filtering results
+
+- The `subset()`-method can be used on `cooccurrences`-objects to filter results. Here, we use ...
+  - a minimum statistical test value (`ll`-value of 11.83),
+  - a minimum number of observations (`count_window` von mindestens 5) 
+  - we exclude words from a stoplist. 
+
+```{r, eval = FALSE}
+cooccurrences("UNGA", query = '"[mM]igration"', left = 10, right = 10) %>% 
+  subset(ll >= 11.83) %>%
+  subset(count_coi >= 5) %>% 
+  subset(!tolower(word) %in% tm::stopwords("en")) %>%
+  subset(!word %in% c("''", ",", "``"))
+```
+
+
+
+
+## Filtered results {.smaller}
+
+```{r, echo = FALSE, eval = TRUE, render = knit_print, message = FALSE}
+cooccurrences("UNGA", query = '"[mM]igration"', left = 10, right = 10) %>% 
+  subset(ll >= 11.83) %>%
+  subset(count_coi >= 5) %>% 
+  subset(!tolower(word) %in% tm::stopwords("en")) %>%
+  subset(!word %in% c("''", ",", "``"))
+```
+
+
+## From quantity to quality {.smaller}
+
+```{r, echo = FALSE}
+options("polmineR.pagelength" = 6L)
+```
+
+
+```{r, render = knit_print, message = FALSE}
+kwic("UNGA", query = "migration", positivelist = "irregular", left = 10L, right = 10L) %>%
+  highlight(yellow = "irregular")
+```
+
+## Graph annotation 
+
+* [threedimensional gradget I](https://polmine.github.io/gcdh_slides/widget_1.html)
+* [threedimensional, anaglyph gradget II](https://polmine.github.io/gcdh_slides/widget_2.html)
+* [threedimensional, anaglyph gradget III (restrictive filtering)](https://polmine.github.io/gcdh_slides/widget_3.html)
+

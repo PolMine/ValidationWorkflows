@@ -1,0 +1,215 @@
+---
+title: "libliniear_classification"
+author: "Christoph Leonhardt"
+date: "26 9 2019"
+output: html_document
+---
+
+```{r}
+library(polmineR)
+```
+
+## Liblinear Classification Optimization
+
+```{r, eval = already_labelled}
+Y2_train <- readRDS("../data/sanctions_kwic_sample.rds")
+training_idx <- readRDS("../data/sanctions_labelled_indices.rds")
+```
+
+```{r}
+dtm <- as.DocumentTermMatrix(Y2, p_attribute = "word")
+```
+
+
+
+First, we create the labels from our labelled kwic object. We did not manage to label all occurences as either positive or negative. To create two disinct classes, we omit the "neutral" cases here.
+
+```{r}
+# fetch the sentiment labels from the labelled kwic object
+annotatedLabels <- as.character(Y2_train@stat$sentiment)
+
+neutral_labelled_instances <- which(annotatedLabels == "neutral")
+
+# we do have unlabelled instances of 'sanctions'. This doesn't work with the liblinear package later.
+annotatedLabels <- annotatedLabels[-neutral_labelled_instances]
+training_idx <- training_idx[-neutral_labelled_instances]
+
+saveRDS(annotatedLabels, "../data/annotatedLabels.rds")
+saveRDS(training_idx, "../data/new_sample_idx_without_neutral.rds")
+```
+
+```{r}
+numberOfDocuments <- length(annotatedLabels)
+```
+
+
+Like Niekler and Wiedemann, we start by transforming the part of our Document-Term-Matrix which contains our labelled data to a sparse matrix.
+
+```{r}
+library(LiblineaR)
+library(SparseM)
+source("liblinear_utils.R")
+
+# to get it to the right format with board means is rather tricky
+annotatedDTM <- dtm[training_idx,] %>%
+  t() %>%
+  polmineR::as.sparseMatrix() %>%
+  Matrix::t() %>%
+  convertMatrixToSparseM()
+```
+
+An essential idea to train a model is to use the labelled data and split it into a training set and a test set which enables us to compare the prediction results of the model with our manual labels before applying it to the entire set of occurrences of 'sanctions'.
+
+
+```{r}
+# split into training and test set
+selector_idx <- rep(c(rep(TRUE, 4), FALSE), length.out = numberOfDocuments)
+trainingDTM <- annotatedDTM[selector_idx, ]
+trainingLabels <- annotatedLabels[selector_idx]
+testDTM <- annotatedDTM[!selector_idx, ]
+testLabels <- annotatedLabels[!selector_idx]
+
+# create LR classification model
+model <- LiblineaR(trainingDTM, trainingLabels)
+summary(model)
+
+classification <- predict(model, testDTM) 
+predictedLabels <- classification$predictions
+contingencyTable <- table(predictedLabels, testLabels)
+print(contingencyTable) 
+
+accuracy <- sum(diag(contingencyTable)) / length(testLabels)
+print(accuracy) # share of correctly classified paragraphs
+```
+
+## K-fold cross validation
+
+To make more use of our limited training data, we can reuse them, using k-fold cross validation to determine the classification quality. By splitting the data and applying quality measures.
+
+```{r}
+k <- 4
+evalMeasures <- NULL
+
+for (j in 1:k) {
+  # create j-th boolean selection vector
+  currentFold <- get_k_fold_logical_indexes(j, k, nrow(trainingDTM))
+  
+  # select training data split
+  foldDTM <- annotatedDTM[!currentFold, ]
+  foldLabels <- annotatedLabels[!currentFold]
+  
+  # create model
+  model <- LiblineaR(foldDTM, foldLabels)
+  
+  # select test data split
+  testSet <- annotatedDTM[currentFold, ]
+  testLabels <- annotatedLabels[currentFold]
+  
+  # predict test labels
+  predictedLabels <- predict(model, testSet)$predictions
+  
+  # evaluate predicted against test labels
+  kthEvaluation <- F.measure(inPred = predictedLabels, inLabels = testLabels, positiveClassName = "positive") 
+  # the less frequent class should be defined as POSITIVE
+  
+  # combine evaluation measures for k runs
+  evalMeasures <- rbind(evalMeasures, kthEvaluation)
+}
+
+# Final evaluation values of k runs:
+print(evalMeasures)
+
+
+# Average over all folds
+print(colMeans(evalMeasures))
+```
+
+When run and validated five times, the mean accuracy is .77, while the F-measure (which is more important) is about .48, which is not that convincing. However, this could be explained by the very limited amount of training data. 
+
+## Optimization
+
+One paramter which can be optimized for linear Support Vector Machine kernels is the Cost parameter (C-Parameter) which will evaluate the ratio of misclassification and overfitting.
+
+```{r}
+cParameterValues <- c(0.003, 0.01, 0.03, 0.1, 0.3, 1, 3 , 10, 30, 100)
+fValues <- NULL
+
+for (cParameter in cParameterValues) {
+  print(paste0("C = ", cParameter))
+  evalMeasures <- k_fold_cross_validation(labeledDTM = annotatedDTM, classesOfDocuments = annotatedLabels, cost = cParameter, k = 5)
+  fValues <- c(fValues, evalMeasures["F"])
+}
+
+plot(fValues, type="o", col="green", xaxt="n")
+axis(1,at=1:length(cParameterValues), labels = cParameterValues)
+
+
+bestC <- cParameterValues[which.max(fValues)]
+print(paste0("Best C value: ", bestC, ", F1 = ", max(fValues)))
+```
+
+The best C value is 100, with F1 being a rather measly 0.43
+
+## Preprocessing Optimization
+
+Niekler and Wiedemann propose to optimize the preprocessing of the input data. 
+
+### Stop Word removal
+
+Taking the Document-Term-Matrix from above, we can remove stopwords rather easily. We also remove rare words.
+
+```{r}
+# remove noisy words
+noise_to_drop <- noise(colnames(dtm), specialChars = NULL, stopwordsLanguage = "en")
+noise_to_drop[["stopwords"]] <- c(
+  noise_to_drop[["stopwords"]],
+  paste(
+    toupper(substr(noise_to_drop[["stopwords"]], 1, 1)),
+    substr(noise_to_drop[["stopwords"]], 2, nchar(noise_to_drop[["stopwords"]])),
+    sep = ""
+  )
+)
+
+dtm <- dtm[,-which(colnames(dtm) %in% unique(unname(unlist(noise_to_drop))))]
+
+# remove rare words
+terms_to_drop_rare <- which(slam::col_sums(dtm) <= 3)
+if (length(terms_to_drop_rare) > 0) dtm <- dtm[,-terms_to_drop_rare]
+
+# remove documents that are empty now
+empty_docs <- which(slam::row_sums(dtm) == 0)
+if (length(empty_docs) > 0) dtm <- dtm[-empty_docs,]
+
+saveRDS(dtm, "../data/dtm_without_stopwords.rds")
+```
+
+Convert to sparse matrix as input.
+
+```{r}
+annotatedDTM <- dtm[training_idx,] %>%
+  t() %>%
+  polmineR::as.sparseMatrix() %>%
+  Matrix::t() %>%
+  convertMatrixToSparseM()
+```
+
+
+```{r}
+cParameterValues <- c(0.003, 0.01, 0.03, 0.1, 0.3, 1, 3 , 10, 30, 100)
+fValues <- NULL
+
+for (cParameter in cParameterValues) {
+  print(paste0("C = ", cParameter))
+  evalMeasures <- k_fold_cross_validation(labeledDTM = annotatedDTM, classesOfDocuments = annotatedLabels, cost = cParameter, k = 5)
+  fValues <- c(fValues, evalMeasures["F"])
+}
+
+plot(fValues, type="o", col="green", xaxt="n")
+axis(1,at=1:length(cParameterValues), labels = cParameterValues)
+
+
+bestC <- cParameterValues[which.max(fValues)]
+print(paste0("Best C value: ", bestC, ", F1 = ", max(fValues)))
+```
+
+Here, the best C value is 0.03 for a still improvable F1 of 0.55 (which is at least slightly better than tossing a coin)

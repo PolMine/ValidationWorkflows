@@ -1,0 +1,198 @@
+---
+title: "Implementing Validation"
+subtitle: "Workflows that combine quantity and quality"
+author: "Andreas Blaette, Christoph Leonhardt"
+date: "September 29, 2019"
+output:
+  ioslides_presentation:
+    css: css/stylesheet.css
+    logo: img/polmine.png
+    widescreen: no
+    incremental: false
+  slidy_presentation: default
+editor_options:
+  chunk_output_type: console
+---
+
+```{r load_packages, message = FALSE, warning = FALSE, include = FALSE} 
+library(fontawesome)
+```
+
+## Schedule {.smaller}
+
+__9:45 - 10:15 Getting Started__
+
+_Who are we | background and expectations | outline of the workshop_
+
+__10:15- 10:30 Implementing validation as a technological frontier__
+
+_The perils of quantification, existing software and the polmineR workflows_
+
+__10:30 - 11:00 Coffee Break__
+
+__11:00 - 13:00 Validating counts and co-occurrences__
+
+_Scenarios and workflows: <a href = "https://polmine.github.io/ValidationWorkflows/counting.html">Validating counts, <a href = "https://polmine.github.io/ValidationWorkflows/counting.html"> validating co-occurrences</a>_
+
+__13:00 - 14:00 Lunch Break__
+
+__14:00 - 15:30 Validation Reloaded__
+
+_Scenarios and workflows: <a href = "https://polmine.github.io/ValidationWorkflows/sentiment_analysis.html">Validating sentiment analysis</a>, <a href = "https://polmine.github.io/ValidationWorkflows/lda.html">validating topic models</a>_
+
+__15:30 - 16:00 Where to go from here__
+
+
+## Computers digesting text
+
+- Natural Language Processing (NLP)
+- Big Data
+- Data Mining | Text Mining
+- Machine Learning (NL)
+- Artificial Intelligence (KI)
+- eHumanities | digital humanities
+- Corpus linguistics and and computational linguistics, information science, statistics, ...
+
+_`r fa("arrow-right", fill = "steelblue")` disciplinary and methodological variety!_
+
+
+## The PolMine Project
+
+- __Research__</br>
+  On migration & integration policy: MigTex, MIDEM, PopParl
+- __Data__</br>
+  Corpora of plenary protocols, Newspaper articles, ...
+- __Code__</br>
+  open source R packages for text analysis, at CRAN & GitHub
+- __Tutorials__</br>
+  Using Corpora in Social Science Research / UCSSR
+- __Centre__</br>
+  CLARIN Centre category C, prospectively part of NFDI
+
+_Learn more: www.polmine.de_
+
+
+## The datafication of text
+
+"The emergence of the computer has made it feasible for social and behavioral scientists to make a fresh start on content analysis. The vast potentialities of content analysis, though foreseen form some years, have been poorly realized, owing chiefly to the onerous task of scanning texts and processing data. The latter operation -- data processing -- has been successfully improved, and there is a promise of automatic scanners that, when appropriately joined with panels of human judges, will accelerate the turning of raw records into data." (Stone et al. 1966)
+
+
+## From text to numbers {.smaller}
+
+- __from computer-assisted content analysis to "text as data"__<br/>
+  scaling party positions as a driver (wordscore and wordfish)
+- __joyful blasphemy agains reading ...__<br/>"[…]because it treats words simply as data rather than requiring any knowledge of their meaning as used in the text, our word scoring method works irrespective of the language in which the texts are written. In other words, while our method is designed to analyze the content of a text, it is not necessary for an analyst using the technique to understand, or even read, the texts to which the technique is applied. The primary advantage of this feature is that the technique can be applied to texts in any language." (Laver, Benoit & Garry 2003)
+- __common methods and applications__
+  - sentiment analyses
+  - topic modelling (unsupervised learning)
+  - classification (cp. Comparative Agendas Project / CAP)
+- __"Validate, validate, validate" (Grimmer at al. 2013)__<br/>An (almost) unheard plea
+
+
+## The idea of "distant reading" {.smaller}
+
+„[…] the trouble with close reading […] is that it necessarily depends on an extremely small canon. […] you invest in individual texts so much only if you think that very few of them really matter. […] if you want to look beyond the canon […], close reading will not do it. […] At the bottom it‘s a theological exercise – very solemn treatment of very few texts taken very seriously – whereas what we really need is a little pact with the devil: we know how to read texts, so now let‘s learn how not to read them. Distant reading, where distance, let me repeat is, is a condition of knowledge. It allows you to focus on units that are much smaller or much larger than the text: devices, themes, types – or genres and systems. And if, between the very small and the very large, the text itself disappears, well, this is one of the cases where one can justifiably say, Less is more. If we want to understand the system in its entirety, we must accept loosing something. We always pay a price for theoretical knowledge; concepts are abstract, are poor. But it‘s precisely this poverty that makes it possible to handle them, and therefore to know.  This is why less is actually more.“ (Moretti [2000] 2013: 49)
+
+
+## Why and how text matters {.smaller}
+
+- __The social sciences and the "linguistic turn"__
+  - An evolving theoretical movement
+  - analysing discourse
+  - analysing frames
+  - analysing narratives
+- __Methodological development__
+  - persistence of paper & pencil-analyses
+  - computer-assisted qualitative analysis (QDA, see MAXQDA, Atlas.ti)
+  - digital humanities / eHumanities
+  - Visual analytics
+- __Varieties of "distant reading" (Moretti 2000)__
+  - "blended reading" (Stulpe, Lemke 2015)
+  - "scalable reading" (Weitin 2017)
+
+
+## Where we stand | A people's corpus miner for quanlification
+
+**intersubjectivity!** Requirement to integrate qualitative and quantitative inquiry ("quanlification")
+
+**equality!** Technical restrictions to achieve "quanlification", privilege of well-funded projects to achieve it
+
+**fraternité**! Open source library that offers basic vocabulary for quanlification to overcome technological restrictions
+
+<br/>
+<center>`r fa("fist-raised", height = 100, fill = "darkgrey")`</center>
+
+## Code: A Suite of R packages {.smaller}
+
+- __Corpus analysis using R and the Corpus Workbench (CWB)__
+  - *polmineR*: Basic vocabulary for corpus analysis (portability, performance, open source, documented, usability, theory-basec)
+  - *RcppCWB*: Wrappers for the C code of the Corpus Workbench
+  - *cwbtools*: Tools for creating and managing CWB indexed corpora
+
+- __Data preparation and dissemination__
+  - *frappp*: Framework for Parsing Plenary Protocols
+  - *GermaParl*: R package for disseminating the GermaParl corpus
+  - *UNGA*: United Nations General Assembly
+  
+- __Tools to combine quantity and quality__
+  - *annolite*: Leightweight annotation tool
+  - *gradget*: Annotation (dreidimensionaler) Kookkurrenz-Graphen
+  - *topicanalysis*: Integration von quantitativer/qualitativer Arbeit mit Topic-Modellen
+
+
+## polmineR - a basic vocabulary {.smaller}
+
+- __Corpora and subcorpora__
+  - corpus objects: *corpus()*
+  - subsetting corpora: *partition()* / *subset()*
+
+- __Quantification__
+  - counting: *hits()*, *count()*, *dispersion()* (and *size()*)
+  - cooccurrences: *cooccuurrences()*, *Cooccurrences()*
+  - feature extraction: *features()*
+  - term-document-matrices: *as.sparseMatrix()*, *as.TermDocumentMatrix()*
+
+- __Qualitative analysis__
+  - Keywords-in-context/concordances: *kwic()*
+  - fulltext (of a subcorpus): *get_token_stream()*, *as.markdown()*, *as.html()*, *read()*
+
+
+## Installation {.smaller}
+
+- Prerequisites: Windows/MacOS/Linux, installation of R and RStudio.
+
+- Install *polmineR* (and *RcppCWB*) from CRAN, get *cwbtools* from GitHub.
+
+```{r installation, eval = FALSE, message = FALSE}
+install.packages("polmineR")
+devtools::install_github("PolMine/cwbtools")
+```
+
+- Easy installation of corpora that are disseminated via R packages.
+
+```{r install_corpus, eval = FALSE}
+drat::addRepo("polmine")
+install.packages("UNGA")
+UNGA::unga_download_corpus()
+```
+
+- Five lines of code, and you are ready to work with fairly large corpora.
+
+```{r load_polmineR, eval = TRUE, message = FALSE}
+library(polmineR)
+use("UNGA")
+```
+
+
+## RStudio Server and Shiny
+
+To skip local installation, we use a RStudio Server, hosting polmineR and the UNGA corpus
+
+<br/>
+<a href = "http://34.208.128.166:8787"><center>`r fa("server", height = 200, fill = "darkgrey")`</center></a>
+
+... and to avoid having to write / look at code, there is a <a href = "http://34.208.128.166:3838/polmineR">Shiny server</a> running hosting the shiny GUI fairly well hidden in the polmineR package.
+
+
+
+
