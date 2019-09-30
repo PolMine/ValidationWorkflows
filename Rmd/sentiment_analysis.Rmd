@@ -331,7 +331,7 @@ We now could save the object. Furthermore, we could already do some analyses wit
 
 ## Visualise it! {.smaller}
 
-```{r visualize_share}
+```{r visualize_share, echo = FALSE}
 Y2_sample <- enrich(Y2_sample, s_attribute = "year", message = FALSE)
 ts_df <- Y2_sample@stat[,c("year", "sentiment")]
 
@@ -435,8 +435,10 @@ ts_df_all[,"sentiment"] <- ifelse(ts_df_all$sentiment == "positive", 1, ifelse(t
 df_manually_annotated_all <- ts_df_all %>%
   group_by(year) %>%
   summarize(net_sent = mean(sentiment))
+```
+## Visualize it again! 
 
-# visualize
+```{r, echo = FALSE}
 p <- ggplot(data = df_manually_annotated_all, aes(x = year, y = net_sent)) +
   geom_bar(stat = "identity", fill = "steelblue") +
   xlab("year") +
@@ -446,13 +448,4 @@ p <- ggplot(data = df_manually_annotated_all, aes(x = year, y = net_sent)) +
 
 p
 ```
-
-We could be tempted to have a look into the speeches which have a positive connotation of 'sanctions'.
-
-```{r, message = FALSE}
-Y2_min <- subset(Y2, sentiment == "positive")
-# read?
-```
-
-
 
