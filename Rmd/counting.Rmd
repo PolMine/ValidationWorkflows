@@ -19,7 +19,7 @@ editor_options:
 
 - **To count is to measure!** Is my measurement valid? Are there sufficient safeguards that I do measure what I intend to measure?
 
-- **Statements about salience means to take the difference between absolute and relative frequencies serious.**. Frequencies are the the normalisiation of counts by dividing counts by corpus/subcorpus size.
+- **Statements about salience means to take the difference between absolute and relative frequencies serious.**. Frequencies are the the normalisation of counts by dividing counts by corpus/subcorpus size.
 
 - **There is a wide variety of scenarios for counting:** We will focus on time series analysis and dictionary-based analyses.
 
@@ -66,7 +66,7 @@ count("UNGA", query = "'refugee.*'", cqp = TRUE) # mit CQP-Syntax
 dt <- count("UNGA", query = "'refugee.*'", cqp = TRUE, breakdown = TRUE)
 ```
 
-- The CQP syntax can also be used to match multiword lexical units.
+- The CQP syntax can also be used to match multi-word lexical units.
 
 ```{r}
 dp <- count("UNGA", query = '"displaced" "persons"', cqp = TRUE)
@@ -120,7 +120,7 @@ count("UNGA", query = '"[rR]efuge.*"', cqp = TRUE, breakdown = TRUE) %>% head(n 
 
 ## Regular Expressions: Examples II {.smaller}
 
-- Alternative formulations are wrapped in brackets and seperated by the "|" sign. 
+- Alternative formulations are wrapped in brackets and separated by the "|" sign. 
 
 ```{r, collapse = TRUE}
 count("UNGA", query = '"(imm|em)igration.*"', breakdown = TRUE) %>% head()
@@ -129,7 +129,7 @@ count("UNGA", query = '"(imm|em)igration.*"', breakdown = TRUE) %>% head()
 
 ## Querying the token stream {.smaller}
 
-- Square brackets serve as a placeholder for any token ...
+- Square brackets serve as a place holder for any token ...
 
 ```{r, collapse = TRUE}
 count("UNGA", query = '"United" "Nations" "Commission" "for" []', cqp = T, breakdown = T)

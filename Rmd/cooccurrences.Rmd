@@ -60,7 +60,7 @@ wordcloud::wordcloud(
 
 - The `subset()`-method can be used on `cooccurrences`-objects to filter results. Here, we use ...
   - a minimum statistical test value (`ll`-value of 11.83),
-  - a minimum number of observations (`count_window` von mindestens 5) 
+  - a minimum number of observations (`count_window` of at least 5) 
   - we exclude words from a stoplist. 
 
 ```{r, eval = FALSE}

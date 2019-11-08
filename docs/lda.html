@@ -4,6 +4,7 @@
   <title>UNGA: A Topic Model</title>
 
   <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta http-equiv="X-UA-Compatible" content="chrome=1">
   <meta name="generator" content="pandoc" />
 
@@ -259,6 +260,7 @@ background: black;
 }
 
 slides > slide {
+display: none;
 font-family: 'Open Sans', Arial, sans-serif;
 font-size: 26px;
 color: #797979;
@@ -279,19 +281,17 @@ transition: all 0.6s ease-in-out;
 }
 
 slides > slide.far-past {
+display: none;
 }
 
 slides > slide.past {
+display: block;
 opacity: 0;
 }
 
 slides > slide.current {
 display: block;
 opacity: 1;
-z-index: 1;
-}
-slides > slide:not(.current) {
-z-index: 0;
 }
 
 slides > slide.current .auto-fadein {
@@ -306,11 +306,13 @@ background-size: 100% 100%;
 }
 
 slides > slide.next {
+display: block;
 opacity: 0;
 pointer-events: none;
 }
 
 slides > slide.far-next {
+display: none;
 }
 
 slides > slide.dark {
@@ -382,6 +384,8 @@ width: 1100px;
 
 slides.layout-widescreen > slide.far-past,
 slides.layout-faux-widescreen > slide.far-past {
+display: block;
+display: none;
 -webkit-transform: translate(-2260px);
 -moz-transform: translate(-2260px);
 -ms-transform: translate(-2260px);
@@ -415,6 +419,8 @@ pointer-events: none;
 
 slides.layout-widescreen > slide.far-next,
 slides.layout-faux-widescreen > slide.far-next {
+display: block;
+display: none;
 -webkit-transform: translate(2260px);
 -moz-transform: translate(2260px);
 -ms-transform: translate(2260px);
@@ -1345,13 +1351,6 @@ opacity: 1;
 
 .overview .slide-area {
 display: none;
-}
-slides > slide {
-background: linear-gradient(#ffffff, #ffffff 85%, #e6e6e6);
-background-color: white;
-}
-slides > slide {
-opacity: 0;
 }
 @media print {
 
@@ -3302,13 +3301,38 @@ if (document.readyState !== "loading" &&
           theseArgs = theseArgs.concat([task.data]);
           task = task.code;
         }
-        var taskFunc = eval("(" + task + ")");
+        var taskFunc = tryEval(task);
         if (typeof(taskFunc) !== "function") {
           throw new Error("Task must be a function! Source:\n" + task);
         }
         taskFunc.apply(target, theseArgs);
       });
     }
+  }
+
+  // Attempt eval() both with and without enclosing in parentheses.
+  // Note that enclosing coerces a function declaration into
+  // an expression that eval() can parse
+  // (otherwise, a SyntaxError is thrown)
+  function tryEval(code) {
+    var result = null;
+    try {
+      result = eval(code);
+    } catch(error) {
+      if (!error instanceof SyntaxError) {
+        throw error;
+      }
+      try {
+        result = eval("(" + code + ")");
+      } catch(e) {
+        if (e instanceof SyntaxError) {
+          throw error;
+        } else {
+          throw e;
+        }
+      }
+    }
+    return result;
   }
 
   function initSizing(el) {
@@ -3703,17 +3727,56 @@ if (document.readyState !== "loading" &&
     invokePostRenderHandlers();
   }
 
-  // Wait until after the document has loaded to render the widgets.
+
+  function has_jQuery3() {
+    if (!window.jQuery) {
+      return false;
+    }
+    var $version = window.jQuery.fn.jquery;
+    var $major_version = parseInt($version.split(".")[0]);
+    return $major_version >= 3;
+  }
+
+  /*
+  / Shiny 1.4 bumped jQuery from 1.x to 3.x which means jQuery's
+  / on-ready handler (i.e., $(fn)) is now asyncronous (i.e., it now
+  / really means $(setTimeout(fn)).
+  / https://jquery.com/upgrade-guide/3.0/#breaking-change-document-ready-handlers-are-now-asynchronous
+  /
+  / Since Shiny uses $() to schedule initShiny, shiny>=1.4 calls initShiny
+  / one tick later than it did before, which means staticRender() is
+  / called renderValue() earlier than (advanced) widget authors might be expecting.
+  / https://github.com/rstudio/shiny/issues/2630
+  /
+  / For a concrete example, leaflet has some methods (e.g., updateBounds)
+  / which reference Shiny methods registered in initShiny (e.g., setInputValue).
+  / Since leaflet is privy to this life-cycle, it knows to use setTimeout() to
+  / delay execution of those methods (until Shiny methods are ready)
+  / https://github.com/rstudio/leaflet/blob/18ec981/javascript/src/index.js#L266-L268
+  /
+  / Ideally widget authors wouldn't need to use this setTimeout() hack that
+  / leaflet uses to call Shiny methods on a staticRender(). In the long run,
+  / the logic initShiny should be broken up so that method registration happens
+  / right away, but binding happens later.
+  */
+  function maybeStaticRenderLater() {
+    if (shinyMode && has_jQuery3()) {
+      window.jQuery(window.HTMLWidgets.staticRender);
+    } else {
+      window.HTMLWidgets.staticRender();
+    }
+  }
+
   if (document.addEventListener) {
     document.addEventListener("DOMContentLoaded", function() {
       document.removeEventListener("DOMContentLoaded", arguments.callee, false);
-      window.HTMLWidgets.staticRender();
+      maybeStaticRenderLater();
     }, false);
   } else if (document.attachEvent) {
     document.attachEvent("onreadystatechange", function() {
       if (document.readyState === "complete") {
         document.detachEvent("onreadystatechange", arguments.callee);
-        window.HTMLWidgets.staticRender();
+        maybeStaticRenderLater();
       }
     });
   }
@@ -3801,7 +3864,7 @@ if (document.readyState !== "loading" &&
       if (o !== null && typeof o === "object" && part in o) {
         if (i == (l - 1)) { // if we are at the end of the line then evalulate
           if (typeof o[part] === "string")
-            o[part] = eval("(" + o[part] + ")");
+            o[part] = tryEval(o[part]);
         } else { // otherwise continue to next embedded object
           o = o[part];
         }
@@ -5433,10 +5496,6 @@ padding-right: inherit;
       transition: opacity 0.6s ease-in 0.4s;
       opacity: 0;
     }
-/* https://github.com/ropensci/plotly/pull/524#issuecomment-468142578 */
-slide:not(.current) .plotly.html-widget{
-  display: block;
-}
 
     slides > slide:not(.nobackground):before {
       font-size: 12pt;
@@ -5488,7 +5547,7 @@ background-size: 125px 41px;
           </hgroup>
   </slide>
 
-<slide class=""><hgroup><h2>LDA Topic Model for the UNGA corpus</h2></hgroup><article  id="lda-topic-model-for-the-unga-corpus" class="smaller">
+<slide class=""><hgroup><h2>LDA Topic Model for the UNGA corpus</h2></hgroup><article  class="smaller" id="lda-topic-model-for-the-unga-corpus">
 
 <ul>
 <li>Getting started</li>
@@ -5506,30 +5565,30 @@ library(topicmodels)</pre>
 lda &lt;- readRDS(lda_filename)
 x &lt;- terms(lda, 50)</pre>
 
-</article></slide><slide class=""><hgroup><h2>Topics 1-5</h2></hgroup><article  id="topics-1-5" class="smaller">
+</article></slide><slide class=""><hgroup><h2>Topics 1-5</h2></hgroup><article  class="smaller" id="topics-1-5">
 
-<div id="htmlwidget-bac3f05cf3b3fa91adaf" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-bac3f05cf3b3fa91adaf">{"x":{"filter":"none","data":[["Court","Statute","States","crimes","Rome","Criminal","ICC","International","justice","international","parties","impunity","cooperation","criminal","victims","jurisdiction","report","serious","law","crime","situations","committed","judicial","cases","work","President","Prosecutor","also","fight","arrest","perpetrators","situation","aggression","mandate","State","first","investigations","humanity","support","Parties","see","system","relationship","accountability","warrants","universality","war","Agreement","Kampala","welcome"],["road","Process","safety","Kimberley","diamonds","conflict","traffic","trade","countries","diamond","Scheme","Road","accidents","Chair","participants","rough","injuries","Certification","industry","Safety","World","global","illicit","also","year","deaths","implementation","number","roads","international","problem","review","armed","efforts","fuelling","resolution","issue","first","civil","legitimate","conflicts","Governments","system","link","society","prevention","role","scheme","important","plenary"],["principles","sovereignty","Charter","international","respect","integrity","States","State","territorial","right","independence","internal","principle","affairs","law","rights","sovereign","use","relations","force","national","foreign","political","peaceful","purposes","based","self-determination","accordance","basis","disputes","equality","country","legitimate","peoples","means","Nations","fundamental","territory","position","believe","independent","non-interference","intervention","exercise","interference","interests","threat","enshrined","unity","legal"],["dialogue","peace","among","culture","civilizations","cultures","understanding","tolerance","diversity","religious","cultural","respect","religions","values","Peace","mutual","promote","different","world","Dialogue","Civilizations","promoting","peoples","society","intercultural","Alliance","coexistence","Culture","promotion","violence","UNESCO","cooperation","religion","interreligious","societies","intolerance","harmony","education","differences","common","together","Year","peaceful","can","initiatives","initiative","various","human","based","ethnic"],["Pacific","Islands","Forum","region","Fiji","Solomon","island","small","United","Nations","Marshall","regional","States","Palau","nations","Nauru","people","Tonga","Vanuatu","support","leaders","Papua","New","Government","Taiwan","developing","continue","including","year","partners","Republic","members","islands","Micronesia","economic","country","future","call","ocean","Samoa","countries","many","resources","nation","Island","Kiribati","continues","global","security","leadership"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Topic 1<\/th>\n      <th>Topic 2<\/th>\n      <th>Topic 3<\/th>\n      <th>Topic 4<\/th>\n      <th>Topic 5<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-5fc807ae6d22fe3c12f4" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-5fc807ae6d22fe3c12f4">{"x":{"filter":"none","data":[["Court","Statute","States","crimes","Rome","Criminal","ICC","International","justice","international","parties","impunity","cooperation","criminal","victims","jurisdiction","report","serious","law","crime","situations","committed","judicial","cases","work","President","Prosecutor","also","fight","arrest","perpetrators","situation","aggression","mandate","State","first","investigations","humanity","support","Parties","see","system","relationship","accountability","warrants","universality","war","Agreement","Kampala","welcome"],["road","Process","safety","Kimberley","diamonds","conflict","traffic","trade","countries","diamond","Scheme","Road","accidents","Chair","participants","rough","injuries","Certification","industry","Safety","World","global","illicit","also","year","deaths","implementation","number","roads","international","problem","review","armed","efforts","fuelling","resolution","issue","first","civil","legitimate","conflicts","Governments","system","link","society","prevention","role","scheme","important","plenary"],["principles","sovereignty","Charter","international","respect","integrity","States","State","territorial","right","independence","internal","principle","affairs","law","rights","sovereign","use","relations","force","national","foreign","political","peaceful","purposes","based","self-determination","accordance","basis","disputes","equality","country","legitimate","peoples","means","Nations","fundamental","territory","position","believe","independent","non-interference","intervention","exercise","interference","interests","threat","enshrined","unity","legal"],["dialogue","peace","among","culture","civilizations","cultures","understanding","tolerance","diversity","religious","cultural","respect","religions","values","Peace","mutual","promote","different","world","Dialogue","Civilizations","promoting","peoples","society","intercultural","Alliance","coexistence","Culture","promotion","violence","UNESCO","cooperation","religion","interreligious","societies","intolerance","harmony","education","differences","common","together","Year","peaceful","can","initiatives","initiative","various","human","based","ethnic"],["Pacific","Islands","Forum","region","Fiji","Solomon","island","small","United","Nations","Marshall","regional","States","Palau","nations","Nauru","people","Tonga","Vanuatu","support","leaders","Papua","New","Government","Taiwan","developing","continue","including","year","partners","Republic","members","islands","Micronesia","economic","country","future","call","ocean","Samoa","countries","many","resources","nation","Island","Kiribati","continues","global","security","leadership"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Topic 1<\/th>\n      <th>Topic 2<\/th>\n      <th>Topic 3<\/th>\n      <th>Topic 4<\/th>\n      <th>Topic 5<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 
-</article></slide><slide class=""><hgroup><h2>Topics 6-9</h2></hgroup><article  id="topics-6-9" class="smaller">
+</article></slide><slide class=""><hgroup><h2>Topics 6-9</h2></hgroup><article  class="smaller" id="topics-6-9">
 
-<div id="htmlwidget-3aa1da217fb99bfe691b" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-3aa1da217fb99bfe691b">{"x":{"filter":"none","data":[["terrorism","international","terrorist","acts","September","attacks","States","fight","must","terrorists","United","combat","people","Terrorism","community","innocent","attack","threat","forms","conventions","world","measures","victims","convention","Government","Convention","events","global","cooperation","security","act","manifestations","struggle","scourge","legal","International","response","terror","can","action","condolences","comprehensive","families","lives","combating","tragic","condemnation","resolution","Suppression","criminal"],["public","administration","State","sector","management","service","reform","private","development","system","civil","services","new","Government","administrative","institutions","corruption","reforms","government","governance","also","will","Governments","society","good","role","transparency","systems","structures","policy","resources","local","sectors","effective","training","policies","capacity","efficient","programme","citizens","experience","social","structural","change","institutional","process","efficiency","Public","functions","changes"],["international","efforts","Egypt","order","also","role","achieve","importance","comprehensive","need","regional","context","framework","upon","call","establishment","regard","based","express","principles","achieving","especially","within","like","States","respect","particularly","aimed","necessary","manner","national","responsibilities","objectives","appreciation","requires","accordance","enhance","various","among","peoples","enable","issues","security","towards","establish","without","deal","outset","important","view"],["peace","East","Middle","process","region","parties","negotiations","Palestinian","Israel","settlement","just","lasting","agreements","Palestine","comprehensive","question","progress","will","people","hope","situation","resolutions","towards","agreement","economic","Government","final","conflict","support","Peace","positive","status","concerned","implementation","talks","developments","Security","Palestinians","Madrid","continue","community","Authority","stability","signing","achieved","West","signed","peoples","new","peaceful"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Topic 6<\/th>\n      <th>Topic 7<\/th>\n      <th>Topic 8<\/th>\n      <th>Topic 9<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-655cb82e96ffee179d6f" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-655cb82e96ffee179d6f">{"x":{"filter":"none","data":[["terrorism","international","terrorist","acts","September","attacks","States","fight","must","terrorists","United","combat","people","Terrorism","community","innocent","attack","threat","forms","conventions","world","measures","victims","convention","Government","Convention","events","global","cooperation","security","act","manifestations","struggle","scourge","legal","International","response","terror","can","action","condolences","comprehensive","families","lives","combating","tragic","condemnation","resolution","Suppression","criminal"],["public","administration","State","sector","management","service","reform","private","development","system","civil","services","new","Government","administrative","institutions","corruption","reforms","government","governance","also","will","Governments","society","good","role","transparency","systems","structures","policy","resources","local","sectors","effective","training","policies","capacity","efficient","programme","citizens","experience","social","structural","change","institutional","process","efficiency","Public","functions","changes"],["international","efforts","Egypt","order","also","role","achieve","importance","comprehensive","need","regional","context","framework","upon","call","establishment","regard","based","express","principles","achieving","especially","within","like","States","respect","particularly","aimed","necessary","manner","national","responsibilities","objectives","appreciation","requires","accordance","enhance","various","among","peoples","enable","issues","security","towards","establish","without","deal","outset","important","view"],["peace","East","Middle","process","region","parties","negotiations","Palestinian","Israel","settlement","just","lasting","agreements","Palestine","comprehensive","question","progress","will","people","hope","situation","resolutions","towards","agreement","economic","Government","final","conflict","support","Peace","positive","status","concerned","implementation","talks","developments","Security","Palestinians","Madrid","continue","community","Authority","stability","signing","achieved","West","signed","peoples","new","peaceful"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Topic 6<\/th>\n      <th>Topic 7<\/th>\n      <th>Topic 8<\/th>\n      <th>Topic 9<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 
-</article></slide><slide class=""><hgroup><h2>Topics 10-14</h2></hgroup><article  id="topics-10-14" class="smaller">
+</article></slide><slide class=""><hgroup><h2>Topics 10-14</h2></hgroup><article  class="smaller" id="topics-10-14">
 
-<div id="htmlwidget-f9eedb013d33f43042ee" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-f9eedb013d33f43042ee">{"x":{"filter":"none","data":[["economic","countries","trade","economy","world","financial","developing","globalization","growth","global","economies","international","markets","market","investment","system","developed","institutions","Trade","integration","development","World","capital","crisis","social","opportunities","policies","process","foreign","benefits","liberalization","access","can","free","also","technology","WTO","flows","policy","trading","production","goods","multilateral","effects","need","Bank","environment","increased","prosperity","domestic"],["United","Nations","system","agencies","bodies","Secretary-General","specialized","role","Members","Headquarters","whole","offices","Let","hold","applaud","setting","expects","position","coordinate","mind","host","nine","premises","outside","advance","initiate","arrangement","effective","resulted","name","strive","Administrator","greatest","avoiding","contribution","within","require","vested","raise","conducted","clearer","membership","take","back","logical","spectrum","March","push","work","recognize"],["women","gender","rights","sexual","equality","men","violence","girls","Women","empowerment","including","human","children","abuse","must","also","exploitation","vulnerable","ensure","discrimination","society","equal","policy","participation","particularly","committed","need","full","protection","access","commitment","work","one","Beijing","strong","ensuring","protect","orientation","forms","civil","female","Gender","key","address","Platform","boys","without","often","accountability","progress"],["slavery","trade","slave","discrimination","racism","African","racial","victims","history","today","Day","transatlantic","forms","International","memorial","people","intolerance","permanent","xenophobia","honour","Durban","Discrimination","also","human","Racial","Group","descent","related","legacy","States","abolition","Elimination","many","day","commemoration","dignity","past","continue","Declaration","Racism","still","world","fight","Slavery","slaves","forced","one","including","societies","humanity"],["trafficking","crime","human","persons","drug","victims","organized","Convention","fight","Crime","transnational","Trafficking","Plan","drugs","combat","illicit","cooperation","Action","international","criminal","combating","Nations","Global","Persons","efforts","United","Protocol","meeting","legal","illegal","prevention","protection","national","Transnational","also","assistance","problem","Organized","Drugs","Combat","Office","crimes","action","effective","law","measures","scourge","corruption","enforcement","prevent"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Topic 10<\/th>\n      <th>Topic 11<\/th>\n      <th>Topic 12<\/th>\n      <th>Topic 13<\/th>\n      <th>Topic 14<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-c26212a3431faf98d85f" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-c26212a3431faf98d85f">{"x":{"filter":"none","data":[["economic","countries","trade","economy","world","financial","developing","globalization","growth","global","economies","international","markets","market","investment","system","developed","institutions","Trade","integration","development","World","capital","crisis","social","opportunities","policies","process","foreign","benefits","liberalization","access","can","free","also","technology","WTO","flows","policy","trading","production","goods","multilateral","effects","need","Bank","environment","increased","prosperity","domestic"],["United","Nations","system","agencies","bodies","Secretary-General","specialized","role","Members","Headquarters","whole","offices","Let","hold","applaud","setting","expects","position","coordinate","mind","host","nine","premises","outside","advance","initiate","arrangement","effective","resulted","name","strive","Administrator","greatest","avoiding","contribution","within","require","vested","raise","conducted","clearer","membership","take","back","logical","spectrum","March","push","work","recognize"],["women","gender","rights","sexual","equality","men","violence","girls","Women","empowerment","including","human","children","abuse","must","also","exploitation","vulnerable","ensure","discrimination","society","equal","policy","participation","particularly","committed","need","full","protection","access","commitment","work","one","Beijing","strong","ensuring","protect","orientation","forms","civil","female","Gender","key","address","Platform","boys","without","often","accountability","progress"],["slavery","trade","slave","discrimination","racism","African","racial","victims","history","today","Day","transatlantic","forms","International","memorial","people","intolerance","permanent","xenophobia","honour","Durban","Discrimination","also","human","Racial","Group","descent","related","legacy","States","abolition","Elimination","many","day","commemoration","dignity","past","continue","Declaration","Racism","still","world","fight","Slavery","slaves","forced","one","including","societies","humanity"],["trafficking","crime","human","persons","drug","victims","organized","Convention","fight","Crime","transnational","Trafficking","Plan","drugs","combat","illicit","cooperation","Action","international","criminal","combating","Nations","Global","Persons","efforts","United","Protocol","meeting","legal","illegal","prevention","protection","national","Transnational","also","assistance","problem","Organized","Drugs","Combat","Office","crimes","action","effective","law","measures","scourge","corruption","enforcement","prevent"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Topic 10<\/th>\n      <th>Topic 11<\/th>\n      <th>Topic 12<\/th>\n      <th>Topic 13<\/th>\n      <th>Topic 14<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 
-</article></slide><slide class=""><hgroup><h2>Topics 15-19</h2></hgroup><article  id="topics-15-19" class="smaller">
+</article></slide><slide class=""><hgroup><h2>Topics 15-19</h2></hgroup><article  class="smaller" id="topics-15-19">
 
-<div id="htmlwidget-390d2b580f8a9e81a751" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-390d2b580f8a9e81a751">{"x":{"filter":"none","data":[["per","cent","million","rate","years","billion","population","gross","product","domestic","increase","year","total","number","increased","country","one","national","now","income","average","growth","five","estimated","half","period","live","high","reduction","approximately","target","almost","among","reduced","rates","level","significant","three","less","terms","annual","reach","capita","According","budget","reduce","reached","nearly","compared","since"],["Iraq","Arab","Kuwait","State","international","United","Iraqi","Emirates","region","Qatar","stability","Yemen","also","efforts","States","resolutions","League","Gulf","security","people","Bahrain","Islamic","country","world","regional","call","order","Iran","Government","will","relations","countries","destruction","political","three","suffering","islands","Republic","relevant","Kuwaiti","view","Highness","humanitarian","weapons","hope","end","obligations","brotherly","Sheikh","mass"],["report","Secretary-General","recommendations","contained","document","reports","note","delegation","para","activities","also","made","agree","implementation","comprehensive","view","attention","submitted","thank","states","noted","like","year","clearly","stated","presented","notes","analysis","action","particularly","provides","recommendation","points","contains","fully","detailed","regard","various","general","consideration","rightly","annual","number","statement","conclusions","welcome","useful","debate","proposal","information"],["Mexico","inter","alia","international","will","order","Organization","must","commitment","various","context","strengthen","essential","work","promote","possible","necessary","respect","among","strengthening","importance","new","regard","greater","believes","process","particular","convinced","actions","mechanisms","make","cooperation","within","fundamental","framework","participation","continue","way","can","progress","ensure","aimed","participate","achieve","reason","system","effective","objective","main","objectives"],["global","challenges","world","crisis","Nations","United","must","governance","financial","economic","need","international","system","crises","new","effective","multilateral","solutions","role","issues","face","multilateralism","facing","common","can","address","collective","political","today","challenge","institutions","also","security","agenda","reform","current","change","needs","response","respond","time","action","threats","responsibility","universal","central","increasingly","shared","emerging","urgent"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Topic 15<\/th>\n      <th>Topic 16<\/th>\n      <th>Topic 17<\/th>\n      <th>Topic 18<\/th>\n      <th>Topic 19<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-0272348dc5d2f5b61b3d" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-0272348dc5d2f5b61b3d">{"x":{"filter":"none","data":[["per","cent","million","rate","years","billion","population","gross","product","domestic","increase","year","total","number","increased","country","one","national","now","income","average","growth","five","estimated","half","period","live","high","reduction","approximately","target","almost","among","reduced","rates","level","significant","three","less","terms","annual","reach","capita","According","budget","reduce","reached","nearly","compared","since"],["Iraq","Arab","Kuwait","State","international","United","Iraqi","Emirates","region","Qatar","stability","Yemen","also","efforts","States","resolutions","League","Gulf","security","people","Bahrain","Islamic","country","world","regional","call","order","Iran","Government","will","relations","countries","destruction","political","three","suffering","islands","Republic","relevant","Kuwaiti","view","Highness","humanitarian","weapons","hope","end","obligations","brotherly","Sheikh","mass"],["report","Secretary-General","recommendations","contained","document","reports","note","delegation","para","activities","also","made","agree","implementation","comprehensive","view","attention","submitted","thank","states","noted","like","year","clearly","stated","presented","notes","analysis","action","particularly","provides","recommendation","points","contains","fully","detailed","regard","various","general","consideration","rightly","annual","number","statement","conclusions","welcome","useful","debate","proposal","information"],["Mexico","inter","alia","international","will","order","Organization","must","commitment","various","context","strengthen","essential","work","promote","possible","necessary","respect","among","strengthening","importance","new","regard","greater","believes","process","particular","convinced","actions","mechanisms","make","cooperation","within","fundamental","framework","participation","continue","way","can","progress","ensure","aimed","participate","achieve","reason","system","effective","objective","main","objectives"],["global","challenges","world","crisis","Nations","United","must","governance","financial","economic","need","international","system","crises","new","effective","multilateral","solutions","role","issues","face","multilateralism","facing","common","can","address","collective","political","today","challenge","institutions","also","security","agenda","reform","current","change","needs","response","respond","time","action","threats","responsibility","universal","central","increasingly","shared","emerging","urgent"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Topic 15<\/th>\n      <th>Topic 16<\/th>\n      <th>Topic 17<\/th>\n      <th>Topic 18<\/th>\n      <th>Topic 19<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 
-</article></slide><slide class=""><hgroup><h2>Migration Topics</h2></hgroup><article  id="migration-topics" class="smaller">
+</article></slide><slide class=""><hgroup><h2>Migration Topics</h2></hgroup><article  class="smaller" id="migration-topics">
 
-<div id="htmlwidget-366e5952f3526a3bef58" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-366e5952f3526a3bef58">{"x":{"filter":"none","data":[["migration","migrants","countries","development","international","Migration","origin","human","Dialogue","International","rights","destination","country","migrant","global","workers","High-level","policies","labour","also","cooperation","phenomenon","can","Development","remittances","illegal","challenges","immigration","transit","issue","benefits","policy","dialogue","flows","social","positive","Global","need","mobility","IOM","opportunities","families","protection","issues","immigrants","receiving","legal","host","better","impact"],["refugees","displaced","persons","humanitarian","people","return","Refugees","internally","High","refugee","conflict","Commissioner","situation","million","number","conflicts","assistance","need","homes","community","crisis","Office","forced","displacement","needs","efforts","political","population","host","protection","address","provide","continue","safe","thousands","conditions","support","solutions","UNHCR","suffering","camps","Secretary-General","international","human","lives","neighbouring","large","including","today","also"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Topic 105<\/th>\n      <th>Topic 106<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script></article></slide>
+<div id="htmlwidget-dee5d18e883f5ab9561c" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-dee5d18e883f5ab9561c">{"x":{"filter":"none","data":[["migration","migrants","countries","development","international","Migration","origin","human","Dialogue","International","rights","destination","country","migrant","global","workers","High-level","policies","labour","also","cooperation","phenomenon","can","Development","remittances","illegal","challenges","immigration","transit","issue","benefits","policy","dialogue","flows","social","positive","Global","need","mobility","IOM","opportunities","families","protection","issues","immigrants","receiving","legal","host","better","impact"],["refugees","displaced","persons","humanitarian","people","return","Refugees","internally","High","refugee","conflict","Commissioner","situation","million","number","conflicts","assistance","need","homes","community","crisis","Office","forced","displacement","needs","efforts","political","population","host","protection","address","provide","continue","safe","thousands","conditions","support","solutions","UNHCR","suffering","camps","Secretary-General","international","human","lives","neighbouring","large","including","today","also"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Topic 105<\/th>\n      <th>Topic 106<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script></article></slide>
 
 
   <slide class="backdrop"></slide>

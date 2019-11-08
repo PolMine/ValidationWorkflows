@@ -4,6 +4,7 @@
   <title>Implementing Validation</title>
 
   <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta http-equiv="X-UA-Compatible" content="chrome=1">
   <meta name="generator" content="pandoc" />
 
@@ -260,6 +261,7 @@ background: black;
 }
 
 slides > slide {
+display: none;
 font-family: 'Open Sans', Arial, sans-serif;
 font-size: 26px;
 color: #797979;
@@ -280,19 +282,17 @@ transition: all 0.6s ease-in-out;
 }
 
 slides > slide.far-past {
+display: none;
 }
 
 slides > slide.past {
+display: block;
 opacity: 0;
 }
 
 slides > slide.current {
 display: block;
 opacity: 1;
-z-index: 1;
-}
-slides > slide:not(.current) {
-z-index: 0;
 }
 
 slides > slide.current .auto-fadein {
@@ -307,11 +307,13 @@ background-size: 100% 100%;
 }
 
 slides > slide.next {
+display: block;
 opacity: 0;
 pointer-events: none;
 }
 
 slides > slide.far-next {
+display: none;
 }
 
 slides > slide.dark {
@@ -383,6 +385,8 @@ width: 1100px;
 
 slides.layout-widescreen > slide.far-past,
 slides.layout-faux-widescreen > slide.far-past {
+display: block;
+display: none;
 -webkit-transform: translate(-2260px);
 -moz-transform: translate(-2260px);
 -ms-transform: translate(-2260px);
@@ -416,6 +420,8 @@ pointer-events: none;
 
 slides.layout-widescreen > slide.far-next,
 slides.layout-faux-widescreen > slide.far-next {
+display: block;
+display: none;
 -webkit-transform: translate(2260px);
 -moz-transform: translate(2260px);
 -ms-transform: translate(2260px);
@@ -1346,13 +1352,6 @@ opacity: 1;
 
 .overview .slide-area {
 display: none;
-}
-slides > slide {
-background: linear-gradient(#ffffff, #ffffff 85%, #e6e6e6);
-background-color: white;
-}
-slides > slide {
-opacity: 0;
 }
 @media print {
 
@@ -3098,10 +3097,6 @@ if (document.readyState !== "loading" &&
       transition: opacity 0.6s ease-in 0.4s;
       opacity: 0;
     }
-/* https://github.com/ropensci/plotly/pull/524#issuecomment-468142578 */
-slide:not(.current) .plotly.html-widget{
-  display: block;
-}
 
     slides > slide:not(.nobackground):before {
       font-size: 12pt;
@@ -3153,7 +3148,7 @@ background-size: 125px 41px;
           </hgroup>
   </slide>
 
-<slide class=""><hgroup><h2>Schedule</h2></hgroup><article  class="smaller" id="schedule">
+<slide class=""><hgroup><h2>Schedule</h2></hgroup><article  id="schedule" class="smaller">
 
 <p><strong>9:45 - 10:15 Getting Started</strong></p>
 
@@ -3167,7 +3162,7 @@ background-size: 125px 41px;
 
 <p><strong>11:00 - 13:00 Validating counts and co-occurrences</strong></p>
 
-<p><em>Scenarios and workflows: <a href = "https://polmine.github.io/ValidationWorkflows/counting.html">Validating counts, <a href = "https://polmine.github.io/ValidationWorkflows/counting.html"> validating co-occurrences</a></em></p>
+<p><em>Scenarios and workflows: <a href = "https://polmine.github.io/ValidationWorkflows/counting.html">Validating counts, <a href = "https://polmine.github.io/ValidationWorkflows/cooccurrences.html"> validating co-occurrences</a></em></p>
 
 <p><strong>13:00 - 14:00 Lunch Break</strong></p>
 
@@ -3205,13 +3200,13 @@ background-size: 125px 41px;
 
 </article></slide><slide class=""><hgroup><h2>The datafication of text</h2></hgroup><article  id="the-datafication-of-text">
 
-<p>&ldquo;The emergence of the computer has made it feasible for social and behavioral scientists to make a fresh start on content analysis. The vast potentialities of content analysis, though foreseen form some years, have been poorly realized, owing chiefly to the onerous task of scanning texts and processing data. The latter operation – data processing – has been successfully improved, and there is a promise of automatic scanners that, when appropriately joined with panels of human judges, will accelerate the turning of raw records into data.&rdquo; (Stone et al. 1966)</p>
+<p>&ldquo;The emergence of the computer has made it feasible for social and behavioural scientists to make a fresh start on content analysis. The vast potentialities of content analysis, though foreseen form some years, have been poorly realized, owing chiefly to the onerous task of scanning texts and processing data. The latter operation – data processing – has been successfully improved, and there is a promise of automatic scanners that, when appropriately joined with panels of human judges, will accelerate the turning of raw records into data.&rdquo; (Stone et al. 1966)</p>
 
-</article></slide><slide class=""><hgroup><h2>From text to numbers</h2></hgroup><article  class="smaller" id="from-text-to-numbers">
+</article></slide><slide class=""><hgroup><h2>From text to numbers</h2></hgroup><article  id="from-text-to-numbers" class="smaller">
 
 <ul>
 <li><strong>from computer-assisted content analysis to &ldquo;text as data&rdquo;</strong><br/> scaling party positions as a driver (wordscore and wordfish)</li>
-<li><strong>joyful blasphemy agains reading …</strong><br/>&ldquo;[…]because it treats words simply as data rather than requiring any knowledge of their meaning as used in the text, our word scoring method works irrespective of the language in which the texts are written. In other words, while our method is designed to analyze the content of a text, it is not necessary for an analyst using the technique to understand, or even read, the texts to which the technique is applied. The primary advantage of this feature is that the technique can be applied to texts in any language.&rdquo; (Laver, Benoit &amp; Garry 2003)</li>
+<li><strong>joyful blasphemy agains reading …</strong><br/>&ldquo;[…]because it treats words simply as data rather than requiring any knowledge of their meaning as used in the text, our word scoring method works irrespective of the language in which the texts are written. In other words, while our method is designed to analyse the content of a text, it is not necessary for an analyst using the technique to understand, or even read, the texts to which the technique is applied. The primary advantage of this feature is that the technique can be applied to texts in any language.&rdquo; (Laver, Benoit &amp; Garry 2003)</li>
 <li><strong>common methods and applications</strong>
 
 <ul>
@@ -3219,14 +3214,14 @@ background-size: 125px 41px;
 <li>topic modelling (unsupervised learning)</li>
 <li>classification (cp. Comparative Agendas Project / CAP)</li>
 </ul></li>
-<li><strong>&ldquo;Validate, validate, validate&rdquo; (Grimmer at al. 2013)</strong><br/>An (almost) unheard plea</li>
+<li><strong>&ldquo;Validate, validate, validate&rdquo; (Grimmer et al. 2013)</strong><br/>An (almost) unheard plea</li>
 </ul>
 
-</article></slide><slide class=""><hgroup><h2>The idea of &ldquo;distant reading&rdquo;</h2></hgroup><article  class="smaller" id="the-idea-of-distant-reading">
+</article></slide><slide class=""><hgroup><h2>The idea of &ldquo;distant reading&rdquo;</h2></hgroup><article  id="the-idea-of-distant-reading" class="smaller">
 
 <p>„[…] the trouble with close reading […] is that it necessarily depends on an extremely small canon. […] you invest in individual texts so much only if you think that very few of them really matter. […] if you want to look beyond the canon […], close reading will not do it. […] At the bottom it‘s a theological exercise – very solemn treatment of very few texts taken very seriously – whereas what we really need is a little pact with the devil: we know how to read texts, so now let‘s learn how not to read them. Distant reading, where distance, let me repeat is, is a condition of knowledge. It allows you to focus on units that are much smaller or much larger than the text: devices, themes, types – or genres and systems. And if, between the very small and the very large, the text itself disappears, well, this is one of the cases where one can justifiably say, Less is more. If we want to understand the system in its entirety, we must accept loosing something. We always pay a price for theoretical knowledge; concepts are abstract, are poor. But it‘s precisely this poverty that makes it possible to handle them, and therefore to know. This is why less is actually more.“ (Moretti [2000] 2013: 49)</p>
 
-</article></slide><slide class=""><hgroup><h2>Why and how text matters</h2></hgroup><article  class="smaller" id="why-and-how-text-matters">
+</article></slide><slide class=""><hgroup><h2>Why and how text matters</h2></hgroup><article  id="why-and-how-text-matters" class="smaller">
 
 <ul>
 <li><strong>The social sciences and the &ldquo;linguistic turn&rdquo;</strong>
@@ -3273,13 +3268,13 @@ background-size: 125px 41px;
 
 </center>
 
-</article></slide><slide class=""><hgroup><h2>Code: A Suite of R packages</h2></hgroup><article  class="smaller" id="code-a-suite-of-r-packages">
+</article></slide><slide class=""><hgroup><h2>Code: A Suite of R packages</h2></hgroup><article  id="code-a-suite-of-r-packages" class="smaller">
 
 <ul>
 <li><strong>Corpus analysis using R and the Corpus Workbench (CWB)</strong>
 
 <ul>
-<li><em>polmineR</em>: Basic vocabulary for corpus analysis (portability, performance, open source, documented, usability, theory-basec)</li>
+<li><em>polmineR</em>: Basic vocabulary for corpus analysis (portability, performance, open source, documented, usability, theory-based)</li>
 <li><em>RcppCWB</em>: Wrappers for the C code of the Corpus Workbench</li>
 <li><em>cwbtools</em>: Tools for creating and managing CWB indexed corpora</li>
 </ul></li>
@@ -3293,13 +3288,13 @@ background-size: 125px 41px;
 <li><strong>Tools to combine quantity and quality</strong>
 
 <ul>
-<li><em>annolite</em>: Leightweight annotation tool</li>
-<li><em>gradget</em>: Annotation (dreidimensionaler) Kookkurrenz-Graphen</li>
-<li><em>topicanalysis</em>: Integration von quantitativer/qualitativer Arbeit mit Topic-Modellen</li>
+<li><em>annolite</em>: Lightweight annotation tool</li>
+<li><em>gradget</em>: Annotation of (three-dimensional) cooccurrence graphs</li>
+<li><em>topicanalysis</em>: Integration of quantitative/qualitative approaches with topic models</li>
 </ul></li>
 </ul>
 
-</article></slide><slide class=""><hgroup><h2>polmineR - a basic vocabulary</h2></hgroup><article  class="smaller" id="polminer---a-basic-vocabulary">
+</article></slide><slide class=""><hgroup><h2>polmineR - a basic vocabulary</h2></hgroup><article  id="polminer---a-basic-vocabulary" class="smaller">
 
 <ul>
 <li><strong>Corpora and subcorpora</strong>
@@ -3320,11 +3315,11 @@ background-size: 125px 41px;
 
 <ul>
 <li>Keywords-in-context/concordances: <em>kwic()</em></li>
-<li>fulltext (of a subcorpus): <em>get_token_stream()</em>, <em>as.markdown()</em>, <em>as.html()</em>, <em>read()</em></li>
+<li>full text (of a subcorpus): <em>get_token_stream()</em>, <em>as.markdown()</em>, <em>as.html()</em>, <em>read()</em></li>
 </ul></li>
 </ul>
 
-</article></slide><slide class=""><hgroup><h2>Installation</h2></hgroup><article  class="smaller" id="installation">
+</article></slide><slide class=""><hgroup><h2>Installation</h2></hgroup><article  id="installation" class="smaller">
 
 <ul>
 <li><p>Prerequisites: Windows/MacOS/Linux, installation of R and RStudio.</p></li>

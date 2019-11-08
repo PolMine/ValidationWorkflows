@@ -32,7 +32,7 @@ __10:30 - 11:00 Coffee Break__
 
 __11:00 - 13:00 Validating counts and co-occurrences__
 
-_Scenarios and workflows: <a href = "https://polmine.github.io/ValidationWorkflows/counting.html">Validating counts, <a href = "https://polmine.github.io/ValidationWorkflows/counting.html"> validating co-occurrences</a>_
+_Scenarios and workflows: <a href = "https://polmine.github.io/ValidationWorkflows/counting.html">Validating counts, <a href = "https://polmine.github.io/ValidationWorkflows/cooccurrences.html"> validating co-occurrences</a>_
 
 __13:00 - 14:00 Lunch Break__
 
@@ -74,19 +74,19 @@ _Learn more: www.polmine.de_
 
 ## The datafication of text
 
-"The emergence of the computer has made it feasible for social and behavioral scientists to make a fresh start on content analysis. The vast potentialities of content analysis, though foreseen form some years, have been poorly realized, owing chiefly to the onerous task of scanning texts and processing data. The latter operation -- data processing -- has been successfully improved, and there is a promise of automatic scanners that, when appropriately joined with panels of human judges, will accelerate the turning of raw records into data." (Stone et al. 1966)
+"The emergence of the computer has made it feasible for social and behavioural scientists to make a fresh start on content analysis. The vast potentialities of content analysis, though foreseen form some years, have been poorly realized, owing chiefly to the onerous task of scanning texts and processing data. The latter operation -- data processing -- has been successfully improved, and there is a promise of automatic scanners that, when appropriately joined with panels of human judges, will accelerate the turning of raw records into data." (Stone et al. 1966)
 
 
 ## From text to numbers {.smaller}
 
 - __from computer-assisted content analysis to "text as data"__<br/>
   scaling party positions as a driver (wordscore and wordfish)
-- __joyful blasphemy agains reading ...__<br/>"[…]because it treats words simply as data rather than requiring any knowledge of their meaning as used in the text, our word scoring method works irrespective of the language in which the texts are written. In other words, while our method is designed to analyze the content of a text, it is not necessary for an analyst using the technique to understand, or even read, the texts to which the technique is applied. The primary advantage of this feature is that the technique can be applied to texts in any language." (Laver, Benoit & Garry 2003)
+- __joyful blasphemy agains reading ...__<br/>"[…]because it treats words simply as data rather than requiring any knowledge of their meaning as used in the text, our word scoring method works irrespective of the language in which the texts are written. In other words, while our method is designed to analyse the content of a text, it is not necessary for an analyst using the technique to understand, or even read, the texts to which the technique is applied. The primary advantage of this feature is that the technique can be applied to texts in any language." (Laver, Benoit & Garry 2003)
 - __common methods and applications__
   - sentiment analyses
   - topic modelling (unsupervised learning)
   - classification (cp. Comparative Agendas Project / CAP)
-- __"Validate, validate, validate" (Grimmer at al. 2013)__<br/>An (almost) unheard plea
+- __"Validate, validate, validate" (Grimmer et al. 2013)__<br/>An (almost) unheard plea
 
 
 ## The idea of "distant reading" {.smaller}
@@ -125,7 +125,7 @@ _Learn more: www.polmine.de_
 ## Code: A Suite of R packages {.smaller}
 
 - __Corpus analysis using R and the Corpus Workbench (CWB)__
-  - *polmineR*: Basic vocabulary for corpus analysis (portability, performance, open source, documented, usability, theory-basec)
+  - *polmineR*: Basic vocabulary for corpus analysis (portability, performance, open source, documented, usability, theory-based)
   - *RcppCWB*: Wrappers for the C code of the Corpus Workbench
   - *cwbtools*: Tools for creating and managing CWB indexed corpora
 
@@ -135,9 +135,9 @@ _Learn more: www.polmine.de_
   - *UNGA*: United Nations General Assembly
   
 - __Tools to combine quantity and quality__
-  - *annolite*: Leightweight annotation tool
-  - *gradget*: Annotation (dreidimensionaler) Kookkurrenz-Graphen
-  - *topicanalysis*: Integration von quantitativer/qualitativer Arbeit mit Topic-Modellen
+  - *annolite*: Lightweight annotation tool
+  - *gradget*: Annotation of (three-dimensional) cooccurrence graphs
+  - *topicanalysis*: Integration of quantitative/qualitative approaches with topic models
 
 
 ## polmineR - a basic vocabulary {.smaller}
@@ -154,7 +154,7 @@ _Learn more: www.polmine.de_
 
 - __Qualitative analysis__
   - Keywords-in-context/concordances: *kwic()*
-  - fulltext (of a subcorpus): *get_token_stream()*, *as.markdown()*, *as.html()*, *read()*
+  - full text (of a subcorpus): *get_token_stream()*, *as.markdown()*, *as.html()*, *read()*
 
 
 ## Installation {.smaller}
@@ -192,7 +192,3 @@ To skip local installation, we use a RStudio Server, hosting polmineR and the UN
 <a href = "http://34.208.128.166:8787"><center>`r fa("server", height = 200, fill = "darkgrey")`</center></a>
 
 ... and to avoid having to write / look at code, there is a <a href = "http://34.208.128.166:3838/polmineR">Shiny server</a> running hosting the shiny GUI fairly well hidden in the polmineR package.
-
-
-
-

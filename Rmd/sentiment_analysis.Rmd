@@ -12,12 +12,12 @@ output:
 editor_options:
   chunk_output_type: console
 vignette: >
-  %\VignetteIndexEntry{Diktionäre und Sentiment-Analysen}
+%\VignetteIndexEntry{Diktionäre und Sentiment-Analysen}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
----
-
-```{r klippy, echo=FALSE, include=TRUE}
+  ---
+  
+  ```{r klippy, echo=FALSE, include=TRUE}
 klippy::klippy()
 ```
 
@@ -29,9 +29,9 @@ Which movies are rated particularly good or particularly bad? This can be examin
 
 What are the benefits of sentiment analyses in scientific work? Here, validity and reliability of the method do provide challenge. What do we measure when we measure 'sentiments'? It depends on the answer to this question when and how sentiment analyses can be used as a fruitful and profound research instrument. There is one major distinction within the approach:
 
-  * _Dictionary-based_ methods measure using lists with positive / negative vocabulary.
-  * _Machine Learning_ based methods are developed from training data with known evaluations and make derivations for texts to be reassessed using an algorithm. 
-  
+* _Dictionary-based_ methods measure using lists with positive / negative vocabulary.
+* _Machine Learning_ based methods are developed from training data with known evaluations and make derivations for texts to be reassessed using an algorithm. 
+
 In this manual we work with a, much simpler, dictionary-based method. 
 
 
@@ -39,9 +39,9 @@ In this manual we work with a, much simpler, dictionary-based method.
 
 The following explanations use the `polmineR` package and the `UNGA` corpus. The installation is explained in a separate set of slides. In addition, we use the following packages:
 
-  * `zoo`: A package for working with time series data;
-  * `magrittr`: Tools for chaining R commands in a "pipe" one after the other (see below);
-  * `devtools`: developer tools, we use a command to download a single function;
+* `zoo`: A package for working with time series data;
+* `magrittr`: Tools for chaining R commands in a "pipe" one after the other (see below);
+* `devtools`: developer tools, we use a command to download a single function;
 
 The following code checks whether these packages are installed and installs them if necessary.
 
@@ -82,7 +82,7 @@ use("UNGA")
 
 ## Which dictionary to use? {.smaller}
 
-While in German, we use the classic and more or less unrivaled "SentiWS" dictionary, in English there are several dictionaries which could be used for sentiment analysis. They all need some kind of preparation which are performed in another script. 
+While in German, we use the classic and more or less unrivalled "SentiWS" dictionary, in English there are several dictionaries which could be used for sentiment analysis. They all need some kind of preparation which are performed in another script. 
 
 The dictionaries should use a numeric weight, not only a binary estimation and they should be provided with some kind of Open Source License.
 
@@ -92,7 +92,7 @@ Three dictionaries might be used here ...
 
 ## AFINN
 
-  * The **AFINN** sentiment lexicon by Finn Årup Nielsen, which offers a feature set comparable to SentiWS. **AFINN** does provide a word list in which terms are scored on a scale from -5 to +5 to indicate sentiment (rescaled to -1 to +1 for our purposes). However, it is rather limited in length (2477 terms) and does not provide linguistic annotation. It is available under the Open Database License (ODbL) v1.0. 
+* The **AFINN** sentiment lexicon by Finn Årup Nielsen, which offers a feature set comparable to SentiWS. **AFINN** does provide a word list in which terms are scored on a scale from -5 to +5 to indicate sentiment (rescaled to -1 to +1 for our purposes). However, it is rather limited in length (2477 terms) and does not provide linguistic annotation. It is available under the Open Database License (ODbL) v1.0. 
 
 ```{r source_dict_script and AFINN, message = FALSE}
 source("./script/download_dictionaries.R")
@@ -102,8 +102,8 @@ tail(afinn_df, 5)
 
 ## SentiWordNet {.smaller}
 
-  * The **SentiWordNet** sentiment lexicon (see Baccianella et al. 2010, http://nmis.isti.cnr.it/sebastiani/Publications/LREC10.pdf) provides a list of over 56.000 terms which are provided with three numeric values for positivity, negativity and objectivity (i.e. neutral). The values range from 0 to 1, with their sum being 1 for each term (see ibid. 2200). SentiWordNet 3.0 is available under the CC BY-SA 4.0 License. It is comprehensive in length and does provide Part-of-Speech-Tags. However, it is build with a strong orientation on compound words and ngrams which makes the weight of some words rather obscure.
-  
+* The **SentiWordNet** sentiment lexicon (see Baccianella et al. 2010, http://nmis.isti.cnr.it/sebastiani/Publications/LREC10.pdf) provides a list of over 56.000 terms which are provided with three numeric values for positivity, negativity and objectivity (i.e. neutral). The values range from 0 to 1, with their sum being 1 for each term (see ibid. 2200). SentiWordNet 3.0 is available under the CC BY-SA 4.0 License. It is comprehensive in length and does provide Part-of-Speech-Tags. However, it is build with a strong orientation on compound words and ngrams which makes the weight of some words rather obscure.
+
 ```{r prep_sentiwordnet, eval = FALSE, message = FALSE}
 sentiwordnet_Df <- get_formatted_SentWordNet()
 tail(sentiwordnet_Df, 5)
@@ -112,8 +112,8 @@ tail(sentiwordnet_Df, 5)
 
 ## syuzhet {.smaller}
 
-  * The **syuzhet** dictionary created in the Nebraska Literary Lab by Matthew Jockers et al. It provides about 11.000 terms with a scale of -1 to + 1. The package itself is licensed under GPL-3.
-  
+* The **syuzhet** dictionary created in the Nebraska Literary Lab by Matthew Jockers et al. It provides about 11.000 terms with a scale of -1 to + 1. The package itself is licensed under GPL-3.
+
 ```{r load_syuzhet, message = FALSE}
 syuzhet_df <- syuzhet::get_sentiment_dictionary()
 names(syuzhet_df) <- c("word", "weight")
@@ -121,7 +121,7 @@ syuzhet_df <- as.data.table(syuzhet_df)
 tail(syuzhet_df, 5)
 ```
 
-In general, SentiWordNet does contain the most comprehensive features. However, the weights sometimes prove to be confusing which might be because of the inclusion of compound words in the labeling process. For example, the word "international" is labelled as negative, while compound words like "international affairs" (which we omitted) can convey positive meaning as well. For its comprehensive length and resolution (i.e. the different levels the weight can have), we will work with the Syuzhet dictionary for now. 
+In general, SentiWordNet does contain the most comprehensive features. However, the weights sometimes prove to be confusing which might be because of the inclusion of compound words in the labelling process. For example, the word "international" is labelled as negative, while compound words like "international affairs" (which we omitted) can convey positive meaning as well. For its comprehensive length and resolution (i.e. the different levels the weight can have), we will work with the Syuzhet dictionary for now. 
 
 
 ## Syuzhet: First look at the data {.smaller}
@@ -234,7 +234,7 @@ p
 
 ## How good are the results? {.smaller}
 
-But what is actually behind the numerical values of the determined sentiment scores? To investigate this, we use the possibility of polmineR to reduce a KWIC output according to a positive-list (vector with required words), to color-code words and to show further information via tool tips (here: word weights). So: Move your mouse over the highlighted words!
+But what is actually behind the numerical values of the determined sentiment scores? To investigate this, we use the possibility of polmineR to reduce a KWIC output according to a positive-list (vector with required words), to colour-code words and to show further information via tool tips (here: word weights). So: Move your mouse over the highlighted words!
 
 
 ```{r sentiment_prep_kwic, eval = TRUE, message = FALSE}
@@ -261,10 +261,10 @@ Y
 
 ## Discussion
 
-  * How do you interpret the results of the time series analysis?
-  * How valid are the results?
-  * Is the transition to working with word weightings useful or necessary?
-  
+* How do you interpret the results of the time series analysis?
+* How valid are the results?
+* Is the transition to working with word weightings useful or necessary?
+
 
 ## From dictionary approach to manual annotation {.smaller}
 
@@ -296,7 +296,7 @@ Y2_sample <- Y2[sample_idx]
 
 ## Annotate it {.smaller}
 
-We want to annotate this object systematically, labeling an occurrence of 'sanctions' as either positive, negative or neutral. To achieve this, we want to add a drop down menu to our Keyword-in-Context object. After this, using the `edit` method, we can actually annotate the data.
+We want to annotate this object systematically, labelling an occurrence of 'sanctions' as either positive, negative or neutral. To achieve this, we want to add a drop down menu to our Keyword-in-Context object. After this, using the `edit` method, we can actually annotate the data.
 
 ```{r annotate, eval = FALSE, message = FALSE}
 annotations(Y2_sample) <- list(name = "sentiment", what = factor("a", levels = c("positive", "negative", "neutral")))
@@ -326,13 +326,13 @@ saveRDS(Y2_sample, "./data/sanctions_kwic_sample.rds")
 saveRDS(sample_idx, "./data/sanctions_labelled_indices.rds")
 ```
 
-We now could save the object. Furthermore, we could already do some analyses with that by adding the metadata for year and creating a time series of our annotation which we then visualize. Unlike the dictionary based approach earlier, here we only calculate the mean of a binarily coded negative/positive connotation of 'sanctions'.
+We now could save the object. Furthermore, we could already do some analyses with that by adding the metadata for year and creating a time series of our annotation which we then visualize. Unlike the dictionary based approach earlier, here we only calculate the mean of a binary coded negative/positive connotation of 'sanctions'.
 
 
 ## Visualise it! {.smaller}
 
 ```{r visualize_share, echo = FALSE}
-Y2_sample <- enrich(Y2_sample, s_attribute = "year", message = FALSE)
+Y2_sample <- polmineR::enrich(Y2_sample, s_attributes = "year")
 ts_df <- Y2_sample@stat[,c("year", "sentiment")]
 
 # recode the sentiment
@@ -359,7 +359,7 @@ p
 
 ## From manual annotation to machine learning {.smaller}
 
-Our manually coded data is very limited in size, covering about 6% of all occurrences of 'sanctions'. Here, a machine learning approach could be useful. Instead of labeling the remaining 4400 occurrences by hand, we use the labels we already have to guess the class of the unseen data.
+Our manually coded data is very limited in size, covering about 6% of all occurrences of 'sanctions'. Here, a machine learning approach could be useful. Instead of labelling the remaining 4400 occurrences by hand, we use the labels we already have to guess the class of the unseen data.
 
 To use our training data in a Machine Learning context, we transform the Keyword-in-Context output of all occurrences of "sanctions" to a Document-Term-Matrix (DTM) in which for all documents - in this instance: each occurrence of 'sanctions' - the occurrence of words is represented in a bag-of-words-approach. There are about 6000 unique terms in the matrix.
 
@@ -381,7 +381,7 @@ See the script liblinear_classification.Rmd for the optimization process. In thi
 dtm <- readRDS("./data/dtm_without_stopwords.rds")
 annotatedLabels <- readRDS("./data/annotatedLabels.rds")
 reduced_sample_idx <- readRDS("./data/new_sample_idx_without_neutral.rds")
-  
+
 source("./script/liblinear_utils.R")
 annotatedDTM <- dtm[reduced_sample_idx,] %>%
   t() %>%
