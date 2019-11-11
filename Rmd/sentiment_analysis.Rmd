@@ -11,13 +11,9 @@ output:
   slidy_presentation: default
 editor_options:
   chunk_output_type: console
-vignette: >
-%\VignetteIndexEntry{Diktionäre und Sentiment-Analysen}
-  %\VignetteEncoding{UTF-8}
-  %\VignetteEngine{knitr::rmarkdown}
-  ---
+---
   
-  ```{r klippy, echo=FALSE, include=TRUE}
+```{r klippy, echo=FALSE, include=TRUE}
 klippy::klippy()
 ```
 
@@ -60,7 +56,6 @@ if (packageVersion("polmineR") < as.package_version("0.7.9.9035"))
 ```
 
 
-
 ## Let's go {.smaller}
 
 The required packages are now loaded.
@@ -90,7 +85,8 @@ Preferably, the dictionary would have some linguistic information such as Part-o
 
 Three dictionaries might be used here ...
 
-## AFINN
+
+## AFINN {.smaller}
 
 * The **AFINN** sentiment lexicon by Finn Årup Nielsen, which offers a feature set comparable to SentiWS. **AFINN** does provide a word list in which terms are scored on a scale from -5 to +5 to indicate sentiment (rescaled to -1 to +1 for our purposes). However, it is rather limited in length (2477 terms) and does not provide linguistic annotation. It is available under the Open Database License (ODbL) v1.0. 
 
@@ -100,19 +96,20 @@ afinn_df <- get_formatted_afinn()
 tail(afinn_df, 5)
 ```
 
+
 ## SentiWordNet {.smaller}
 
 * The **SentiWordNet** sentiment lexicon (see Baccianella et al. 2010, http://nmis.isti.cnr.it/sebastiani/Publications/LREC10.pdf) provides a list of over 56.000 terms which are provided with three numeric values for positivity, negativity and objectivity (i.e. neutral). The values range from 0 to 1, with their sum being 1 for each term (see ibid. 2200). SentiWordNet 3.0 is available under the CC BY-SA 4.0 License. It is comprehensive in length and does provide Part-of-Speech-Tags. However, it is build with a strong orientation on compound words and ngrams which makes the weight of some words rather obscure.
 
-```{r prep_sentiwordnet, eval = FALSE, message = FALSE}
+```{r prep_sentiwordnet, eval = TRUE, message = FALSE}
 sentiwordnet_Df <- get_formatted_SentWordNet()
 tail(sentiwordnet_Df, 5)
 ```
 
 
-## syuzhet {.smaller}
+## Syuzhet {.smaller}
 
-* The **syuzhet** dictionary created in the Nebraska Literary Lab by Matthew Jockers et al. It provides about 11.000 terms with a scale of -1 to + 1. The package itself is licensed under GPL-3.
+* The **Syuzhet** dictionary was created in the Nebraska Literary Lab by Matthew Jockers et al. It provides about 11.000 terms with a scale of -1 to + 1. The package itself is licensed under GPL-3.
 
 ```{r load_syuzhet, message = FALSE}
 syuzhet_df <- syuzhet::get_sentiment_dictionary()
@@ -120,6 +117,9 @@ names(syuzhet_df) <- c("word", "weight")
 syuzhet_df <- as.data.table(syuzhet_df)
 tail(syuzhet_df, 5)
 ```
+
+
+## The Choice of Syuzhet {.smaller}
 
 In general, SentiWordNet does contain the most comprehensive features. However, the weights sometimes prove to be confusing which might be because of the inclusion of compound words in the labelling process. For example, the word "international" is labelled as negative, while compound words like "international affairs" (which we omitted) can convey positive meaning as well. For its comprehensive length and resolution (i.e. the different levels the weight can have), we will work with the Syuzhet dictionary for now. 
 
@@ -132,7 +132,7 @@ The syuzhet_df object is a `data.table` object. We use this instead of a classic
 head(syuzhet_df, 5)
 ```
 
-In the last column ("weight") you can see that words are assigned a weighting in the dictionary. This can be positive (for "positive" vocabulary) or negative (for "negative" words). We can check how many positive or negative words are in the table.
+In the last column ("weight") you can see that words are assigned a weighting in the dictionary. This can be positive (for "positive" vocabulary) or negative (for "negative" vocabulary). We can check how many positive or negative words are in the table.
 
 ```{r inspect_syuzhet_vocab, eval = TRUE, message = FALSE}
 vocab <- c(positive = nrow(syuzhet_df[weight > 0]), negative = nrow(syuzhet_df[weight < 0]))
@@ -168,9 +168,8 @@ The df-data.frame lists the statistics of the word surroundings of each occurren
 
 ```{r table_sentiment, message = FALSE}
 df <- df[, c("name", "size", "positive_n", "negative_n")] 
-head(df, n = 15)
+head(df, n = 10)
 ```
-
 
 
 ## Aggregation {.smaller}
@@ -201,8 +200,7 @@ Z <- zoo(
 ```
 
 
-
-## Visualisation {.smaller}
+## Visualisation I {.smaller}
 
 ```{r sentiment_plot_1, message = FALSE}
 plot(
@@ -212,9 +210,7 @@ plot(
 ```
 
 
-
 ## Visualisation II
-
 
 ```{r sentiment_plot_2, message = FALSE, echo = FALSE}
 library(ggplot2)
@@ -226,8 +222,10 @@ p <- ggplot(data = df_year_2, aes(x = year, y = net_share)) +
   geom_bar(stat = "identity", fill = "steelblue") +
   xlab("year") +
   ylab("") + 
-  labs(title = 'Context of the term "sanctions"', subtitle = "Debates in the United Nations General Assembly, Net-Sentiment")  +
-  theme_minimal()
+  labs(title = 'Context of the term "sanctions"', subtitle = "Debates in the United Nations General Assembly, Net-Sentiment") +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle = 90, vjust = 0.5))
+  
 p
 ```
 
@@ -351,7 +349,8 @@ p <- ggplot(data = df_manually_annotated, aes(x = year, y = net_sent)) +
   xlab("year") +
   ylab("") + 
   labs(title = 'Context of the term "sanctions"', subtitle = "Debates in the United Nations General Assembly, Net-Sentiment manually annotated")  +
-  theme_minimal()
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle = 90, vjust = 0.5))
 
 p
 ```
@@ -436,6 +435,8 @@ df_manually_annotated_all <- ts_df_all %>%
   group_by(year) %>%
   summarize(net_sent = mean(sentiment))
 ```
+
+
 ## Visualize it again! 
 
 ```{r, echo = FALSE}
@@ -444,8 +445,7 @@ p <- ggplot(data = df_manually_annotated_all, aes(x = year, y = net_sent)) +
   xlab("year") +
   ylab("") + 
   labs(title = 'Context of the term "sanctions"', subtitle = "Debates in the United Nations General Assembly, Net-Sentiment manually annotated")  +
-  theme_minimal()
-
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle = 90, vjust = 0.5))
 p
 ```
-
